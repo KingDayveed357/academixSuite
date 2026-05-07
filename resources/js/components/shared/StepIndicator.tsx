@@ -1,0 +1,1 @@
+export function StepIndicator({ steps, current }: { steps: string[]; current: number }) { return <div className="mb-6 grid grid-cols-5 gap-2">{steps.map((s,i)=><div key={s} className={`rounded-sm border px-2 py-2 text-xs ${i<=current?'border-accent bg-credit text-[#1D4ED8]':'border-border text-text-secondary'}`}>{i+1}. {s}</div>)}</div> }

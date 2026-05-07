@@ -1,0 +1,4 @@
+import type { PaymentStatus } from '@/types/financial'
+import { Badge } from '@/components/ui/shadcn/Badge'
+const cfg: Record<PaymentStatus, { label: string; bg: string; text: string; border: string }> = { paid: { label: 'Paid', bg: '#ECFDF5', text: '#065F46', border: '#6EE7B7' }, partial: { label: 'Partial', bg: '#FFFBEB', text: '#92400E', border: '#FCD34D' }, unpaid: { label: 'Unpaid', bg: '#FEF2F2', text: '#991B1B', border: '#FCA5A5' }, credit: { label: 'Credit', bg: '#EFF6FF', text: '#1D4ED8', border: '#93C5FD' }, voided: { label: 'Voided', bg: '#F3F4F6', text: '#6B7280', border: '#D1D5DB' }, error: { label: 'Mismatch', bg: '#FFF7ED', text: '#C2410C', border: '#FDBA74' } }
+export function StatusBadge({ status }: { status: PaymentStatus }) { const c = cfg[status]; return <Badge style={{ backgroundColor: c.bg, color: c.text, borderColor: c.border }}>{c.label}</Badge> }

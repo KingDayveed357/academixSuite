@@ -1,0 +1,1 @@
+export function Badge({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) { return <span style={style} className="inline-flex h-5 items-center rounded-sm border px-2 text-2xs font-medium">{children}</span> }

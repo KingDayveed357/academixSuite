@@ -1,0 +1,2 @@
+import { formatRelativeTime } from '@/lib/formatters'
+export function AuditFeed({ events }: { events: Array<{ id: string; action: string; actor: string; createdAt: string; entity: string }> }) { return <div className="space-y-2">{events.map(e => <div key={e.id} className="rounded-md border border-border bg-surface p-3"><p className="text-sm text-text-primary">{e.action} · {e.entity}</p><p className="text-xs text-text-secondary">{e.actor} · {formatRelativeTime(e.createdAt)}</p></div>)}</div> }
