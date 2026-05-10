@@ -1,5 +1,14 @@
-import { useState } from "react";
-import { Link, router } from "@inertiajs/react";
+// import { useState } from "react";
+// import { Link, router } from "@inertiajs/react";
+// import PageMeta from "../../../components/common/PageMeta";
+// import AppLayout from "../../../layouts/AppLayout";
+// import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
+// import Label from "../../../components/form/Label";
+// import Input from "../../../components/form/input/InputField";
+// import Select from "../../../components/form/Select";
+// import TextArea from "../../../components/form/input/TextArea";
+
+import { Link, router, useForm } from "@inertiajs/react";
 import PageMeta from "../../../components/common/PageMeta";
 import AppLayout from "../../../layouts/AppLayout";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
@@ -7,11 +16,16 @@ import Label from "../../../components/form/Label";
 import Input from "../../../components/form/input/InputField";
 import Select from "../../../components/form/Select";
 import TextArea from "../../../components/form/input/TextArea";
+import { usePlan } from "../../../hooks/usePlan";
+import { AlertCircle, ArrowRight } from "lucide-react";
+import route from "../../../utils/route";
 
 export default function CreateStudent() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+  const plan = usePlan();
+  const form = useForm({
+    first_name: "",
+    last_name: "",
+    admission_no: "",
     dateOfBirth: "",
     gender: "",
     grade: "",
@@ -21,21 +35,13 @@ export default function CreateStudent() {
     address: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call, then redirect to the index page
-    console.log("Submitting student data:", formData);
-    // In a real Inertia flow, this would be: router.post('/admin/students', formData);
-    router.visit('/students');
+    if (plan.student_limit_reached) return;
+    
+    form.post(route('students.store'), {
+      onSuccess: () => form.reset(),
+    });
   };
 
   return (
@@ -51,28 +57,61 @@ export default function CreateStudent() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
+          {plan.student_limit_reached && (
+            <div className="mb-8 flex items-start gap-4 p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-xl">
+              <AlertCircle className="size-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-rose-900 dark:text-rose-200">Limit Reached</h4>
+                <p className="text-sm text-rose-700 dark:text-rose-400 mt-1">
+                  You have reached the 50-student limit for the Free plan. Upgrade to Growth for up to 500 students.
+                </p>
+                <Link 
+                  href="/settings/billing" 
+                  className="inline-flex items-center gap-1 mt-3 text-xs font-bold text-rose-800 dark:text-rose-300 underline underline-offset-4 decoration-rose-300 dark:decoration-rose-700"
+                >
+                  Upgrade anytime <ArrowRight className="size-3" />
+                </Link>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* First Name */}
             <div>
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="first_name">First Name</Label>
               <Input
-                id="firstName"
-                name="firstName"
+                id="first_name"
+                name="first_name"
                 placeholder="Enter first name"
-                value={formData.firstName}
-                onChange={handleChange}
+                value={form.data.first_name}
+                onChange={e => form.setData('first_name', e.target.value)}
+                error={form.errors.first_name}
               />
             </div>
 
             {/* Last Name */}
             <div>
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="last_name">Last Name</Label>
               <Input
-                id="lastName"
-                name="lastName"
+                id="last_name"
+                name="last_name"
                 placeholder="Enter last name"
-                value={formData.lastName}
-                onChange={handleChange}
+                value={form.data.last_name}
+                onChange={e => form.setData('last_name', e.target.value)}
+                error={form.errors.last_name}
+              />
+            </div>
+
+            {/* Admission No */}
+            <div>
+              <Label htmlFor="admission_no">Admission No</Label>
+              <Input
+                id="admission_no"
+                name="admission_no"
+                placeholder="e.g. SCH-2024-001"
+                value={form.data.admission_no}
+                onChange={e => form.setData('admission_no', e.target.value)}
+                error={form.errors.admission_no}
               />
             </div>
 
@@ -83,8 +122,8 @@ export default function CreateStudent() {
                 id="dateOfBirth"
                 name="dateOfBirth"
                 type="date"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
+                value={form.data.dateOfBirth}
+                onChange={e => form.setData('dateOfBirth', e.target.value)}
               />
             </div>
 
@@ -98,22 +137,7 @@ export default function CreateStudent() {
                   { value: "other", label: "Other" },
                 ]}
                 placeholder="Select gender"
-                onChange={(value) => handleSelectChange("gender", value)}
-              />
-            </div>
-
-            {/* Grade */}
-            <div>
-              <Label htmlFor="grade">Grade / Class</Label>
-              <Select
-                options={[
-                  { value: "grade_9", label: "Grade 9" },
-                  { value: "grade_10", label: "Grade 10" },
-                  { value: "grade_11", label: "Grade 11" },
-                  { value: "grade_12", label: "Grade 12" },
-                ]}
-                placeholder="Assign a class"
-                onChange={(value) => handleSelectChange("grade", value)}
+                onChange={(value) => form.setData("gender", value)}
               />
             </div>
           </div>
@@ -131,8 +155,8 @@ export default function CreateStudent() {
                 id="parentName"
                 name="parentName"
                 placeholder="Enter guardian's full name"
-                value={formData.parentName}
-                onChange={handleChange}
+                value={form.data.parentName}
+                onChange={e => form.setData('parentName', e.target.value)}
               />
             </div>
 
@@ -142,8 +166,8 @@ export default function CreateStudent() {
                 id="parentPhone"
                 name="parentPhone"
                 placeholder="+1 234 567 8900"
-                value={formData.parentPhone}
-                onChange={handleChange}
+                value={form.data.parentPhone}
+                onChange={e => form.setData('parentPhone', e.target.value)}
               />
             </div>
 
@@ -154,8 +178,8 @@ export default function CreateStudent() {
                 name="parentEmail"
                 type="email"
                 placeholder="guardian@example.com"
-                value={formData.parentEmail}
-                onChange={handleChange}
+                value={form.data.parentEmail}
+                onChange={e => form.setData('parentEmail', e.target.value)}
               />
             </div>
 
@@ -165,8 +189,8 @@ export default function CreateStudent() {
                 id="address"
                 name="address"
                 placeholder="Enter full address"
-                value={formData.address}
-                onChange={handleChange}
+                value={form.data.address}
+                onChange={e => form.setData('address', e.target.value)}
                 rows={3}
               />
             </div>
@@ -182,9 +206,10 @@ export default function CreateStudent() {
             </Link>
             <button
               type="submit"
-              className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white transition-colors rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
+              disabled={form.processing || plan.student_limit_reached}
+              className={`inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white transition-colors rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              Enroll Student
+              {form.processing ? 'Processing...' : 'Enroll Student'}
             </button>
           </div>
         </form>

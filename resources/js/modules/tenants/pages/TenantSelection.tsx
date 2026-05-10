@@ -1,9 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Building2, ArrowRight, School, Plus, LogOut } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import GridShape from '../../../components/common/GridShape';
-import { useAuth } from '../../../hooks/useAuth';
-import { useTenant } from '../../../hooks/useTenant';
 
 interface Tenant {
   id: number;
@@ -15,13 +13,14 @@ interface Tenant {
 }
 
 export default function TenantSelection() {
-  const { session, switchTenant, signOut } = useAuth();
-  const { school } = useTenant();
-  const schools = session.tenants as Tenant[];
+  const { schools } = usePage<{ schools: Tenant[] }>().props;
 
   const selectSchool = (schoolId: number) => {
-    switchTenant(schoolId);
-    window.location.href = '/dashboard';
+    router.post('/select-tenant', { school_id: schoolId });
+  };
+
+  const signOut = () => {
+    router.post('/logout');
   };
 
   return (
@@ -53,7 +52,7 @@ export default function TenantSelection() {
               key={tenant.id}
               type="button"
               onClick={() => selectSchool(tenant.id)}
-              className={cn('group flex items-center justify-between rounded-[2rem] border bg-white p-6 text-left shadow-sm transition-all duration-300 dark:bg-gray-800', school.id === tenant.id ? 'border-brand-500' : 'border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500')}
+              className={cn('group flex items-center justify-between rounded-[2rem] border bg-white p-6 text-left shadow-sm transition-all duration-300 dark:bg-gray-800', 'border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500')}
             >
               <div className="flex items-center gap-5">
                 <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-brand-50 dark:group-hover:bg-brand-500/10 group-hover:text-brand-600 transition-colors">

@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\School;
-use App\Models\SchoolUser;
+use App\Models\Membership;
+use App\Services\Tenancy\TenantResolver;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -28,21 +29,20 @@ class TenantSelectionController extends Controller
         return Inertia::render('Auth/SelectTenant', ['schools' => $schools]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, TenantResolver $resolver)
     {
         $data = $request->validate(['school_id' => ['required', 'integer', 'exists:schools,id']]);
-        $allowed = SchoolUser::withoutGlobalScopes()
+        $membership = Membership::withoutGlobalScopes()
             ->where('school_id', $data['school_id'])
             ->where('user_id', auth()->id())
-            ->exists();
+            ->first();
 
-        abort_unless($allowed, 403);
+        abort_unless($membership, 403);
 
-        $school = School::withoutGlobalScopes()->findOrFail($data['school_id']);
+        $school = $membership->school;
+        $resolver->bind($school);
+        $request->session()->put('membership_role', $membership->role);
 
-        $request->session()->put('tenant_id', $school->id);
-        $request->session()->put('school_id', $school->id);
-
-        return redirect()->away($school->tenantUrl('/dashboard'));
+        return Inertia::location($school->tenantUrl('/dashboard'));
     }
 }

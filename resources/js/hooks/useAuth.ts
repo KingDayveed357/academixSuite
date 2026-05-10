@@ -1,25 +1,19 @@
-import { Role, User } from '../types/roles';
-import { useMockSession } from '../app/providers/MockSessionProvider';
+import { usePage, router } from '@inertiajs/react';
+import { PageProps } from '../types/inertia';
 
 export function useAuth() {
-  const { user, role, signIn, signOut, session, registerSchool, switchTenant, completeOnboarding } = useMockSession();
-  const resolvedUser = user ? { id: String(user.id), name: user.name, email: user.email, role: user.role } : null;
+    const { auth } = usePage<PageProps>().props;
 
-  const hasRole = (roles: Role | Role[]) => {
-    const rolesArray = Array.isArray(roles) ? roles : [roles];
-    return resolvedUser ? rolesArray.includes(resolvedUser.role) : false;
-  };
+    const signOut = () => {
+        router.post('/logout');
+    };
 
-  return {
-    user: resolvedUser,
-    role,
-    hasRole,
-    isAuthenticated: !!user,
-    signIn,
-    signOut,
-    session,
-    registerSchool,
-    switchTenant,
-    completeOnboarding,
-  };
+    return {
+        user: auth.user,
+        membership: auth.membership,
+        role: auth.role,
+        permissions: auth.permissions,
+        isAuthenticated: !!auth.user,
+        signOut,
+    };
 }

@@ -16,7 +16,7 @@ const TONES = {
 export default function AuthNote({ title, message, tone = 'neutral' }: AuthNoteProps) {
   return (
     <div className={cn('rounded-2xl border px-4 py-1', TONES[tone])}>
-      <p className="text-sm font-semibold">{title}</p>
+      <div className="text-sm font-semibold">{title}</div>
       <p className="mt-1 text-sm leading-6 opacity-90">{message}</p>
     </div>
   );

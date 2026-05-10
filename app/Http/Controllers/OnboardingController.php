@@ -39,15 +39,31 @@ class OnboardingController extends Controller
             'currency'         => ['nullable', 'string', 'max:10'],
             'fee_template'     => ['nullable', 'string', 'in:standard,tertiary,custom'],
             'classes'          => ['nullable', 'string'],
+            'address'          => ['nullable', 'string', 'max:500'],
+            'contact_email'    => ['nullable', 'email', 'max:255'],
+            'contact_phone'    => ['nullable', 'string', 'max:20'],
+            'logo_path'        => ['nullable', 'string', 'max:255'],
+            'wizard_step'      => ['nullable', 'integer'],
         ]);
 
         $school = $this->tenantContext->get();
 
         if (! $school) {
-            return back()->with('success', 'Settings saved.');
+            return back()->with('error', 'School context not found.');
         }
 
-        $this->onboardingService->saveSettings($school, array_filter($data, fn($v) => $v !== null));
+        // Separate school model fields from onboarding_settings
+        $schoolFields = ['address', 'contact_email', 'contact_phone', 'logo_path'];
+        $updateData = array_intersect_key($data, array_flip($schoolFields));
+        $settingsData = array_diff_key($data, array_flip($schoolFields));
+
+        if (! empty($updateData)) {
+            $school->update(array_filter($updateData, fn($v) => $v !== null));
+        }
+
+        if (! empty($settingsData)) {
+            $this->onboardingService->saveSettings($school, array_filter($settingsData, fn($v) => $v !== null));
+        }
 
         return back()->with('success', 'Settings saved.');
     }

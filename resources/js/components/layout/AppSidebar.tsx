@@ -4,16 +4,18 @@ import { HorizontaLDots } from "../../icons";
 import { useSidebar } from "../../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 import { navigationItems } from "../../app/routes/navigation";
-import { useMockSession } from "../../app/providers/MockSessionProvider";
+import { useAuth } from "../../hooks/useAuth";
+import { useTenant } from "../../hooks/useTenant";
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const { url } = usePage();
-  const { role } = useMockSession();
+  const { role } = useAuth();
+  const { tenant } = useTenant();
 
   // Filter items by role
   const activeItems = navigationItems.filter(
-    (item) => !role || item.roles.includes(role)
+    (item) => !role || item.roles.includes(role as any)
   );
 
   const isActive = useCallback(
@@ -27,7 +29,7 @@ const AppSidebar: React.FC = () => {
         const Icon = nav.icon;
         const active = isActive(nav.href);
         return (
-          <li key={nav.label}>
+          <li key={nav.id}>
             <Link
               href={nav.href}
               className={`menu-item group ${
@@ -75,30 +77,31 @@ const AppSidebar: React.FC = () => {
       >
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="dark:hidden"
-                src="/assets/logo.png"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <img
-                className="hidden dark:block"
-                src="/assets/dark-logo.png"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+            <div className="flex items-center gap-3">
+               {tenant?.metadata?.logo_path ? (
+                 <img src={tenant.metadata.logo_path} alt={tenant.name} className="h-10 w-auto rounded" />
+               ) : (
+                 <div className="h-10 w-10 bg-brand-500 rounded flex items-center justify-center text-white font-bold">
+                    {tenant?.name?.substring(0, 1) || 'A'}
+                 </div>
+               )}
+               <div className="flex flex-col">
+                  <span className="font-bold text-gray-900 dark:text-white truncate max-w-[150px]">
+                    {tenant?.name || 'AcademixSuite'}
+                  </span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                    {role?.replace('_', ' ')}
+                  </span>
+               </div>
+            </div>
           ) : (
-            <img
-              src="/assets/logo.png"
-              alt="Logo"
-              width={32}
-              height={32}
-              className="object-contain"
-            />
+            tenant?.metadata?.logo_path ? (
+              <img src={tenant.metadata.logo_path} alt={tenant.name} className="h-8 w-8 rounded" />
+            ) : (
+              <div className="h-8 w-8 bg-brand-500 rounded flex items-center justify-center text-white font-bold text-xs">
+                 {tenant?.name?.substring(0, 1) || 'A'}
+              </div>
+            )
           )}
         </Link>
       </div>

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\SchoolUser;
+use App\Models\Membership;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -26,20 +26,20 @@ class User extends Authenticatable
 
     public function schoolMemberships()
     {
-        return $this->hasMany(SchoolUser::class);
+        return $this->hasMany(Membership::class);
     }
 
     public function schools()
     {
-        return $this->belongsToMany(School::class, 'school_user')
-            ->withPivot(['role', 'staff_id', 'status'])
+        return $this->belongsToMany(School::class, 'memberships')
+            ->withPivot(['role', 'staff_id', 'status', 'last_accessed_at'])
             ->withTimestamps();
     }
 
     /**
      * Get membership for a specific school.
      */
-    public function membershipFor(int $schoolId): ?SchoolUser
+    public function membershipFor(int $schoolId): ?Membership
     {
         return $this->schoolMemberships()->where('school_id', $schoolId)->first();
     }
@@ -49,7 +49,7 @@ class User extends Authenticatable
      */
     public static function findByStaffId(string $staffId, int $schoolId): ?self
     {
-        $membership = SchoolUser::withoutGlobalScopes()
+        $membership = Membership::withoutGlobalScopes()
             ->where('staff_id', $staffId)
             ->where('school_id', $schoolId)
             ->first();

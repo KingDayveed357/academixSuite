@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Enums\Role;
 use App\Models\School;
-use App\Models\SchoolUser;
+use App\Models\Membership;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +33,7 @@ class SchoolOnboardingService
             // Generate PREFIX-0001 style staff_id for the owner
             $staffId = $school->generateStaffId();
 
-            SchoolUser::withoutGlobalScopes()->create([
+            Membership::withoutGlobalScopes()->create([
                 'school_id' => $school->id,
                 'user_id'   => $user->id,
                 'role'      => Role::SCHOOL_OWNER->value,

@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\SchoolUser;
+use App\Models\Membership;
 use App\Support\Tenancy\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -23,10 +23,10 @@ class EnsureUserBelongsToTenant
         $user = $request->user();
 
         if (! $user) {
-            return redirect()->route('login');
+            return redirect()->route('tenant.login');
         }
 
-        $membership = SchoolUser::withoutGlobalScopes()
+        $membership = Membership::withoutGlobalScopes()
             ->where('school_id', $school->id)
             ->where('user_id', $user->id)
             ->first();

@@ -5,11 +5,13 @@ import { useSidebar } from "../../context/SidebarContext";
 import { ThemeToggleButton } from "../common/ThemeToggleButton";
 import NotificationDropdown from "../header/NotificationDropdown";
 import UserDropdown from "../header/UserDropdown";
+import { useTenant } from "../../hooks/useTenant";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { tenant } = useTenant();
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -84,16 +86,18 @@ const AppHeader: React.FC = () => {
           </button>
 
           <Link href="/" className="lg:hidden">
-            <img
-              className="dark:hidden h-8 w-auto"
-              src="/assets/logo.png"
-              alt="Logo"
-            />
-            <img
-              className="hidden dark:block h-8 w-auto"
-              src="/assets/dark-logo.png"
-              alt="Logo"
-            />
+            {tenant?.metadata?.logo_path ? (
+              <img src={tenant.metadata.logo_path} alt={tenant.name} className="h-8 w-auto rounded" />
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 bg-brand-500 rounded flex items-center justify-center text-white font-bold text-xs">
+                  {tenant?.name?.substring(0, 1) || 'A'}
+                </div>
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {tenant?.name || 'AcademixSuite'}
+                </span>
+              </div>
+            )}
           </Link>
 
           <button

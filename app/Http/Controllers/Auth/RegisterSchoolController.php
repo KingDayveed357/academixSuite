@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Services\SchoolOnboardingService;
+use App\Services\Tenancy\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class RegisterSchoolController extends Controller
         return Inertia::render('Auth/Register');
     }
 
-    public function store(Request $request, SchoolOnboardingService $service)
+    public function store(Request $request, SchoolOnboardingService $service, TenantResolver $resolver)
     {
         $data = $request->validate([
             'school_name' => ['required', 'string', 'max:255'],
@@ -31,11 +32,11 @@ class RegisterSchoolController extends Controller
         $result = $service->onboard($data);
 
         auth()->login($result['user']);
-        $request->session()->put('tenant_id', $result['school']->id);
-        $request->session()->put('school_id', $result['school']->id);
+        
+        $resolver->bind($result['school']);
         $request->session()->put('membership_role', 'school_owner');
 
-        // Redirect to onboarding wizard (not dashboard yet)
-        return Inertia::location($result['school']->tenantUrl('/onboarding'));
+        // Redirect to registration success page
+        return Inertia::location($result['school']->tenantUrl('/register/success'));
     }
 }

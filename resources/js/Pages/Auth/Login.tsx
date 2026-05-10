@@ -7,16 +7,18 @@ type LoginPageProps = {
   status?: string;
 };
 
-type SharedProps = {
-  tenant?: { name: string } | null;
-};
+import { PageProps } from '../../types/inertia';
 
 export default function LoginPage({ status }: LoginPageProps) {
-  const { props } = usePage<SharedProps>();
+  const { props } = usePage<PageProps>();
+  const schoolName = props.tenant?.name ?? 'AcademixSuite';
 
   return (
     <>
-      <PageMeta title="Sign In - AcademixSuite" description="Access your school workspace with your Staff ID and password." />
+      <PageMeta 
+        title={`Sign In - ${schoolName}`} 
+        description={props.tenant ? `Access ${schoolName} dashboard.` : "Access your school workspace with your email address."} 
+      />
       <AuthLayout variant="login">
         <LoginForm key={props.tenant?.name ?? 'login'} />
       </AuthLayout>

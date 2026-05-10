@@ -2,6 +2,7 @@ import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import AppHeader from "../components/layout/AppHeader";
 import Backdrop from "../components/layout/Backdrop";
 import AppSidebar from "../components/layout/AppSidebar";
+import PlanBanner from "../components/billing/PlanBanner";
 
 const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -18,6 +19,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
+        <PlanBanner />
         <div className="mx-auto max-w-(--breakpoint-2xl) bg-gray-50 p-4 dark:bg-gray-950 md:p-6">
           {children}
         </div>

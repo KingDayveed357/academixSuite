@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\School;
-use App\Models\SchoolUser;
+use App\Models\Membership;
 use App\Models\User;
+use App\Services\Auth\MembershipService;
+use App\Services\Tenancy\TenantResolver;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,70 +24,78 @@ class LoginController extends Controller
         ]);
     }
 
-    public function store(Request $request, TenantContext $tenantContext)
+    public function store(Request $request, TenantResolver $resolver, MembershipService $membershipService)
     {
-        $credentials = $request->validate([
-            'staff_id' => ['required', 'string'],
+        $input = $request->validate([
+            'identity' => ['required', 'string'],
             'password' => ['required', 'string'],
             'remember' => ['boolean'],
         ]);
 
-        $school = $tenantContext->get();
+        $school = $resolver->resolve($request);
+        $user = null;
 
-        $membershipQuery = SchoolUser::withoutGlobalScopes()
-            ->where('staff_id', $credentials['staff_id']);
+        // 1. Resolve User
+        if (filter_var($input['identity'], FILTER_VALIDATE_EMAIL)) {
+            $user = User::where('email', $input['identity'])->first();
+        } elseif ($school) {
+            // Staff ID Login (Only on subdomains)
+            $user = User::findByStaffId($input['identity'], $school->id);
+        }
 
+        // 2. Pre-auth Subdomain Check
         if ($school) {
-            $membershipQuery->where('school_id', $school->id);
+            if (! $user || ! $user->membershipFor($school->id)) {
+                throw ValidationException::withMessages([
+                    'identity' => 'This account isn’t registered under this school. Please confirm your school’s login link or try the main login page.',
+                ]);
+            }
         }
 
-        $membership = $membershipQuery->first();
-
-        if (! $membership) {
+        // 3. Verify Password
+        if (! $user || ! Hash::check($input['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'staff_id' => $school
-                    ? 'No account found with this Staff ID in your school.'
-                    : 'Could not resolve school. Please access via your school subdomain.',
+                'identity' => 'Invalid credentials.',
             ]);
         }
 
-        if (! $school) {
-            $school = School::withoutGlobalScopes()->find($membership->school_id);
+        // 4. Determine Redirection Path
+        $memberships = $membershipService->getActiveMemberships($user);
+
+        if ($memberships->isEmpty()) {
+            Auth::login($user, $input['remember'] ?? false);
+            $request->session()->regenerate();
+            return redirect()->route('register.school');
         }
 
-        if (! $school) {
-            throw ValidationException::withMessages([
-                'staff_id' => 'Could not resolve school. Please access via your school subdomain.',
-            ]);
+        // Case A: On a Subdomain
+        if ($school) {
+            $membership = $memberships->firstWhere('school_id', $school->id);
+            if (! $membership) {
+                throw ValidationException::withMessages([
+                    'identity' => 'You do not have permission to access this school.',
+                ]);
+            }
+
+            Auth::login($user, $input['remember'] ?? false);
+            $request->session()->regenerate();
+            $resolver->bind($school);
+            
+            // USE Inertia::location for cross-subdomain or full-page redirects to avoid CORS/XHR issues
+            return Inertia::location($school->tenantUrl('/dashboard'));
         }
 
-        if ($membership->status !== 'active') {
-            throw ValidationException::withMessages([
-                'staff_id' => 'Your account has been suspended. Please contact your administrator.',
-            ]);
-        }
-
-        $user = User::find($membership->user_id);
-
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'password' => 'Incorrect password.',
-            ]);
-        }
-
-        Auth::login($user, $credentials['remember'] ?? false);
+        // Case B: Central Login
+        Auth::login($user, $input['remember'] ?? false);
         $request->session()->regenerate();
-        $request->session()->put('tenant_id', $school->id);
-        $request->session()->put('school_id', $school->id);
-        $request->session()->put('membership_role', $membership->role);
 
-        // Role-based redirect
-        return match ($membership->role) {
-            'school_owner' => redirect()->route('owner.dashboard'),
-            'school_admin' => redirect()->route('admin.dashboard'),
-            'bursar'       => redirect()->route('finance.dashboard'),
-            default        => redirect()->route('owner.dashboard'),
-        };
+        if ($memberships->count() === 1) {
+            $school = $memberships->first()->school;
+            return Inertia::location($school->tenantUrl('/dashboard'));
+        }
+
+        // Multiple schools -> Selector (On central domain)
+        return redirect()->route('tenant.select');
     }
 
     public function destroy(Request $request)
@@ -94,6 +104,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        // Redirect to central login to ensure a clean state
+        return Inertia::location(config('app.url') . '/login');
     }
 }

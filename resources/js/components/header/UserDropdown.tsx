@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import { useAuth } from "../../hooks/useAuth";
 
 
@@ -20,7 +20,6 @@ export default function UserDropdown() {
   function handleSignOut(e: React.MouseEvent) {
     e.preventDefault();
     signOut();
-    router.visit('/signin');
   }
 
   const firstName = user?.name?.split(' ')[0] ?? 'Guest';
@@ -149,6 +148,18 @@ export default function UserDropdown() {
             </DropdownItem>
           </li>
         </ul>
+
+        <div className="pt-3 pb-3 border-b border-gray-200 dark:border-gray-800">
+           <a 
+            href={`${(usePage().props as any).app_url}/select-tenant`}
+            className="flex items-center gap-3 px-3 py-2 font-medium text-brand-600 rounded-lg group text-theme-sm hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-950/20"
+           >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Switch School
+           </a>
+        </div>
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"

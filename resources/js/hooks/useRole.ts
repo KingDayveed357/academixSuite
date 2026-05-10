@@ -1,22 +1,19 @@
-import { usePage } from '@inertiajs/react'
-import type { AuthUser, UserRole } from '@/types/auth'
+import { usePage } from '@inertiajs/react';
+import { PageProps } from '../types/inertia';
 
 export function useRole() {
-  const page = usePage<{ auth?: { user?: AuthUser } }>()
-  const inertiaUser = page.props.auth?.user
+    const { auth } = usePage<PageProps>().props;
+    const role = auth.role;
 
-  const storedRole = (typeof window !== 'undefined'
-    ? localStorage.getItem('mock_role')
-    : null) as UserRole | null
-
-  const role: UserRole = inertiaUser?.role ?? storedRole ?? 'SCHOOL_ADMIN'
-
-  return {
-    role,
-    isSuperAdmin: role === 'SUPER_ADMIN',
-    isSchoolOwner: role === 'SCHOOL_OWNER',
-    isSchoolAdmin: role === 'SCHOOL_ADMIN',
-    isBursar: role === 'BURSAR',
-    can: (allowedRoles: UserRole[]) => allowedRoles.includes(role),
-  }
+    return {
+        role,
+        isSuperAdmin: role === 'SUPER_ADMIN',
+        isSchoolOwner: role === 'SCHOOL_OWNER',
+        isSchoolAdmin: role === 'SCHOOL_ADMIN',
+        isBursar: role === 'BURSAR',
+        isTeacher: role === 'TEACHER',
+        isStudent: role === 'STUDENT',
+        isParent: role === 'PARENT',
+        can: (allowedRoles: string[]) => role ? allowedRoles.includes(role) : false,
+    };
 }

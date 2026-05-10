@@ -17,15 +17,49 @@ class School extends Model
         'location',
         'status',
         'onboarding_completed',
+        'address',
+        'contact_email',
+        'contact_phone',
+        'logo_path',
+        'plan',
+        'trial_ends_at',
+        'plan_limits_enforced',
+        'first_class_created_at',
+        'first_student_added_at',
+        'first_payment_recorded_at',
+        'first_report_exported_at',
     ];
 
     protected $casts = [
-        'onboarding_completed' => 'boolean',
+        'onboarding_completed'      => 'boolean',
+        'plan_limits_enforced'      => 'boolean',
+        'trial_ends_at'             => 'datetime',
+        'first_class_created_at'    => 'datetime',
+        'first_student_added_at'    => 'datetime',
+        'first_payment_recorded_at' => 'datetime',
+        'first_report_exported_at'  => 'datetime',
     ];
+
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function staff(): HasMany
+    {
+        return $this->hasMany(Membership::class); // In this app, staff = memberships
+    }
 
     public static function tenantBaseHost(): string
     {
         return (string) (parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'academixsuite.test');
+    }
+
+    public static function tenantBasePort(): ?int
+    {
+        $port = parse_url((string) config('app.url'), PHP_URL_PORT);
+
+        return is_int($port) ? $port : null;
     }
 
     public static function tenantDomainForSlug(string $slug): string
@@ -35,22 +69,27 @@ class School extends Model
 
     public function tenantUrl(string $path = ''): string
     {
-        $scheme = (string) (parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'http');
-        $host = $this->domain ?: static::tenantDomainForSlug($this->slug);
         $path = '/' . ltrim($path, '/');
+        $scheme = (string) (parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'http');
+        $port = static::tenantBasePort();
+        $portSuffix = $port ? ':' . $port : '';
 
-        return $scheme . '://' . $host . $path;
+        // Enforce Subdomain-based routing ({slug}.academixsuite.com/dashboard)
+        // This ensures tenant isolation and follows the requested production-grade strategy.
+        $host = $this->domain ?: static::tenantDomainForSlug($this->slug);
+
+        return $scheme . '://' . $host . $portSuffix . $path;
     }
 
     public function memberships(): HasMany
     {
-        return $this->hasMany(SchoolUser::class);
+        return $this->hasMany(Membership::class);
     }
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'school_user')
-            ->withPivot(['role', 'staff_id', 'status'])
+        return $this->belongsToMany(User::class, 'memberships')
+            ->withPivot(['role', 'staff_id', 'status', 'last_accessed_at'])
             ->withTimestamps();
     }
 
@@ -67,7 +106,7 @@ class School extends Model
     {
         $prefix = strtoupper(substr(preg_replace('/[^a-z]/i', '', $this->slug), 0, 4));
 
-        $lastMembership = SchoolUser::withoutGlobalScopes()
+        $lastMembership = Membership::withoutGlobalScopes()
             ->where('school_id', $this->id)
             ->whereNotNull('staff_id')
             ->orderByDesc('id')

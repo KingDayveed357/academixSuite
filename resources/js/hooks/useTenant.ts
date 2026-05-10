@@ -1,7 +1,17 @@
-import { useMockSession } from '../app/providers/MockSessionProvider'
+import { usePage } from '@inertiajs/react';
+import { PageProps } from '../types/inertia';
 
 export function useTenant() {
-  const { tenant, session } = useMockSession()
-  const school = tenant ?? { id: 0, name: 'Platform Context', slug: 'platform', domain: 'platform', location: 'Platform' }
-  return { school, tenants: session.tenants }
+    const { tenant } = usePage<PageProps>().props;
+
+    return {
+        tenant,
+        id: tenant?.id,
+        name: tenant?.name,
+        slug: tenant?.slug,
+        onboardingCompleted: tenant?.onboarding_completed ?? false,
+        metadata: tenant?.metadata,
+        settings: tenant?.onboarding_settings || {},
+        hasTenant: !!tenant,
+    };
 }

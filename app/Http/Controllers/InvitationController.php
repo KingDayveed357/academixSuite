@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Role;
 use App\Models\Invitation;
-use App\Models\SchoolUser;
+use App\Models\Membership;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
@@ -126,7 +126,7 @@ class InvitationController extends Controller
         }
 
         // Attach user to school
-        $existingMembership = SchoolUser::withoutGlobalScopes()
+        $existingMembership = Membership::withoutGlobalScopes()
             ->where('school_id', $school->id)
             ->where('user_id', $user->id)
             ->first();
@@ -134,7 +134,7 @@ class InvitationController extends Controller
         if (! $existingMembership) {
             $staffId = $school->generateStaffId();
 
-            SchoolUser::withoutGlobalScopes()->create([
+            Membership::withoutGlobalScopes()->create([
                 'school_id' => $school->id,
                 'user_id'   => $user->id,
                 'role'      => $invitation->role,
@@ -150,6 +150,6 @@ class InvitationController extends Controller
         $request->session()->put('school_id', $school->id);
         $request->session()->put('membership_role', $invitation->role);
 
-        return redirect()->away($school->tenantUrl($invitation->role === 'bursar' ? '/finance' : '/admin'));
+        return Inertia::location($school->tenantUrl($invitation->role === 'bursar' ? '/finance' : '/dashboard'));
     }
 }

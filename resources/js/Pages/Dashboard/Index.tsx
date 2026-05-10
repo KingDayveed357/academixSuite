@@ -1,15 +1,20 @@
 import PageMeta from "../../components/common/PageMeta";
 import AppLayout from "../../layouts/AppLayout";
-import { useMockSession } from "../../app/providers/MockSessionProvider";
+import { usePage } from "@inertiajs/react";
+import { PageProps } from "../../types/inertia";
 import StatCard from "../../components/dashboard/StatCard";
 import RecentOrders from "../../components/ecommerce/RecentOrders";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
 import DemographicCard from "../../components/ecommerce/DemographicCard";
-import { GroupIcon, BoxIconLine } from "../../icons"; 
+import SetupWizardWidget from "../../components/dashboard/SetupWizardWidget";
+import ActivationRail from "../../components/dashboard/ActivationRail";
 import { Building2, Users, Wallet, GraduationCap, DollarSign, Activity } from "lucide-react";
 
 export default function DashboardIndex() {
-  const { user, role, tenant } = useMockSession();
+  const { auth, tenant, activation } = usePage<PageProps>().props;
+  const { user, role } = auth;
+
+  const isManagement = role === 'SCHOOL_OWNER' || role === 'SCHOOL_ADMIN';
 
   const renderSuperAdminDashboard = () => (
     <>
@@ -97,6 +102,9 @@ export default function DashboardIndex() {
           </p>
         </div>
       </div>
+
+      {isManagement && <SetupWizardWidget />}
+      {activation && <ActivationRail activation={activation} />}
 
       {role === 'SUPER_ADMIN' && renderSuperAdminDashboard()}
       {role === 'SCHOOL_OWNER' && renderOwnerDashboard()}

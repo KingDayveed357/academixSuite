@@ -25,6 +25,7 @@ class ResolveTenant
             'register.school.store',
             'tenant.select',
             'tenant.select.store',
+            'register.success',
         ];
 
         if (! $tenant && ! $request->routeIs(...$guestRoutes) && ! $request->routeIs('preview.*', 'platform.*')) {
@@ -35,7 +36,7 @@ class ResolveTenant
             auth()->logout();
             $request->session()->invalidate();
 
-            return redirect()->route('login');
+            return redirect()->route('tenant.login');
         }
 
         return $next($request);
