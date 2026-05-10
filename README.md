@@ -1,58 +1,60 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AcademixSuite
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+AcademixSuite is a premium, multi-tenant school management SaaS designed for high-performance institutional administration. Built with Laravel 13, Inertia.js, and React, it provides a seamless, "Stripe-level" experience for school owners and administrators.
 
-## About Laravel
+## 🚀 Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend:** Laravel 13 (PHP 8.2+)
+- **Frontend:** React 18 + TypeScript
+- **Bridge:** Inertia.js (The "Classic Monolith" feel with SPA performance)
+- **Styling:** Tailwind CSS + Vanilla CSS (Premium Custom Design System)
+- **Database:** MySQL 8.0+
+- **Tenancy:** Subdomain-based isolation (Custom resolution logic)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Local Setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd academixsuite
+   ```
 
-## Learning Laravel
+2. **Backend Installation:**
+   ```bash
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+3. **Database Setup:**
+   Create a database and update `.env` credentials.
+   ```bash
+   php artisan migrate --seed
+   ```
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+4. **Frontend Installation:**
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+5. **Local Domain Configuration:**
+   To test multi-tenancy locally, use `nip.io` or update your `hosts` file:
+   - Central: `http://127.0.0.1.nip.io:8000`
+   - Tenant: `http://school-slug.127.0.0.1.nip.io:8000`
 
-## Agentic Development
+## 🏗️ Architecture Note
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+AcademixSuite uses a **Shared Database, Isolated Scope** tenancy model. 
+- All data resides in one database.
+- `school_id` is applied via global scopes in Eloquent.
+- Tenant resolution happens via `TenantResolver` service in the request middleware.
 
-```bash
-composer require laravel/boost --dev
+For deep architectural details, see [SYSTEM.md](./SYSTEM.md).
 
-php artisan boost:install
-```
+## 🤝 Contribution Guidelines
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Branching:** Use `feat/`, `fix/`, or `refactor/` prefixes.
+2. **Pull Requests:** All changes must be peer-reviewed via PR.
+3. **Coding Standards:** Follow PSR-12 for PHP and ESLint/Prettier for React.
+4. **Thin Controllers:** Keep business logic in `App\Services`.
